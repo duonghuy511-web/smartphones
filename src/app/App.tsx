@@ -169,7 +169,21 @@ function BtnOutline({ children, onClick, className = "", dark = true }: { childr
 }
 
 // ─── HEADER ──────────────────────────────────────────────────────────────────
-function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setPage: (p: string) => void; cartCount: number; onLoginClick: () => void }) {
+function Header({
+  page,
+  setPage,
+  cartCount,
+  onLoginClick,
+  onSearchClick,
+  onCartClick,
+}: {
+  page: string;
+  setPage: (p: string) => void;
+  cartCount: number;
+  onLoginClick: () => void;
+  onSearchClick: () => void;
+  onCartClick: () => void;
+}) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -180,7 +194,7 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
   }, []);
 
   const navItems = [
-    { label: "Trang chủ", target: "top" },
+    { label: "Trang chủ", target: "home" },
     { label: "Sản phẩm", target: "products" },
     { label: "Khuyến mãi", target: "promotions" },
     { label: "Phụ kiện", target: "accessories" },
@@ -188,25 +202,10 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
     { label: "Hỗ trợ", target: "support" },
   ];
 
-  function goSection(target: string) {
+  function goPage(target: string) {
     setMobileOpen(false);
-
-    if (target === "products") {
-      setPage("products");
-      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
-      return;
-    }
-
-    setPage("home");
-
-    window.setTimeout(() => {
-      if (target === "top") {
-        window.scrollTo({ top: 0, behavior: "smooth" });
-        return;
-      }
-
-      document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
-    }, page === "home" ? 0 : 80);
+    setPage(target);
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   }
 
   return (
@@ -221,16 +220,16 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
       }}
     >
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12 h-16 flex items-center justify-between">
-        <a href="#" onClick={e => { e.preventDefault(); setPage("home"); window.scrollTo(0,0); }}>
+        <a href="#" onClick={e => { e.preventDefault(); goPage("home"); }}>
           <Logo />
         </a>
 
         <nav className="hidden lg:flex items-center gap-0.5">
           {navItems.map((item) => (
-            <a key={item.target} href={`#${item.target}`}
-              onClick={e => { e.preventDefault(); goSection(item.target); }}
+            <a key={item.target} href="#"
+              onClick={e => { e.preventDefault(); goPage(item.target); }}
               className="px-4 py-2 text-sm font-semibold rounded-full transition-colors"
-              style={{ color: (item.target === "top" && page === "home") || (item.target === "products" && page === "products") ? C.cyan : "rgba(240,246,255,0.68)" }}>
+              style={{ color: page === item.target ? C.cyan : "rgba(240,246,255,0.68)" }}>
               {item.label}
             </a>
           ))}
@@ -239,7 +238,7 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
         <div className="flex items-center gap-1">
           <button
             aria-label="Tìm kiếm sản phẩm"
-            onClick={() => goSection("products")}
+            onClick={onSearchClick}
             className="hidden md:flex p-2 rounded-full transition-colors"
             style={{ color: "rgba(240,246,255,0.55)" }}
             onMouseEnter={e => (e.currentTarget.style.color = "#F0F6FF")}
@@ -257,7 +256,7 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
           >
             <User size={18} />
           </button>
-          <button className="flex p-2 rounded-full relative" style={{ color: "rgba(240,246,255,0.55)" }}>
+          <button onClick={onCartClick} aria-label="Mở giỏ hàng" className="flex p-2 rounded-full relative" style={{ color: "rgba(240,246,255,0.55)" }}>
             <ShoppingCart size={18} />
             {cartCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center text-white" style={{ background: C.cyan }}>
@@ -265,7 +264,7 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
               </span>
             )}
           </button>
-          <BtnPrimary className="hidden md:inline-flex text-sm px-5 py-2 ml-1.5" onClick={() => goSection("products")}>Mua ngay</BtnPrimary>
+          <BtnPrimary className="hidden md:inline-flex text-sm px-5 py-2 ml-1.5" onClick={() => goPage("products")}>Mua ngay</BtnPrimary>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 ml-1" style={{ color: "rgba(240,246,255,0.8)" }}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -276,14 +275,17 @@ function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setP
         <div className="lg:hidden border-t" style={{ background: "rgba(13,31,56,0.97)", backdropFilter: "blur(20px)", borderColor: "rgba(255,255,255,0.07)" }}>
           <div className="px-6 py-4 flex flex-col gap-1">
             {navItems.map((item) => (
-              <a key={item.target} href={`#${item.target}`} onClick={e => { e.preventDefault(); goSection(item.target); }} className="py-3 px-4 text-sm font-semibold rounded-xl" style={{ color: "rgba(240,246,255,0.7)" }}>
+              <a key={item.target} href="#" onClick={e => { e.preventDefault(); goPage(item.target); }} className="py-3 px-4 text-sm font-semibold rounded-xl" style={{ color: "rgba(240,246,255,0.7)" }}>
                 {item.label}
               </a>
             ))}
+            <button onClick={() => { setMobileOpen(false); onSearchClick(); }} className="py-3 px-4 text-sm font-semibold rounded-xl flex items-center gap-2" style={{ color: "rgba(240,246,255,0.7)" }}>
+              <Search size={16} /> Tìm kiếm
+            </button>
             <button onClick={() => { setMobileOpen(false); onLoginClick(); }} className="py-3 px-4 text-sm font-semibold rounded-xl flex items-center gap-2" style={{ color: "rgba(240,246,255,0.7)" }}>
               <User size={16} /> Đăng nhập
             </button>
-            <BtnPrimary className="mt-3 py-3.5 px-4 text-sm w-full" onClick={() => goSection("products")}>Mua ngay <ArrowRight size={16} /></BtnPrimary>
+            <BtnPrimary className="mt-3 py-3.5 px-4 text-sm w-full" onClick={() => goPage("products")}>Mua ngay <ArrowRight size={16} /></BtnPrimary>
           </div>
         </div>
       )}
@@ -328,6 +330,141 @@ function LoginModal({ onClose }: { onClose: () => void }) {
         <div className="mt-5 flex items-center justify-between text-sm">
           <a href="#" style={{ color: C.navy }} onClick={e => e.preventDefault()}>Quên mật khẩu?</a>
           <a href="#" style={{ color: C.cyan }} onClick={e => e.preventDefault()}>Tạo tài khoản</a>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function SearchModal({
+  onClose,
+  setPage,
+  setSelectedProductId,
+}: {
+  onClose: () => void;
+  setPage: (p: string) => void;
+  setSelectedProductId: (id: number) => void;
+}) {
+  const [query, setQuery] = useState("");
+  const results = PRODUCTS.filter((p) => {
+    const text = `${p.name} ${p.specs.join(" ")}`.toLowerCase();
+    return text.includes(query.trim().toLowerCase());
+  });
+
+  function openProduct(id: number) {
+    setSelectedProductId(id);
+    setPage("product");
+    onClose();
+    window.scrollTo(0, 0);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-start justify-center px-4 pt-24 pb-6" style={{ background: "rgba(4,12,22,0.72)", backdropFilter: "blur(10px)" }}>
+      <div className="relative w-full max-w-2xl rounded-[28px] p-6 max-h-[calc(100dvh-120px)] overflow-y-auto" style={{ background: "#fff", boxShadow: "0 24px 80px rgba(0,0,0,0.32)" }}>
+        <button aria-label="Đóng tìm kiếm" onClick={onClose} className="absolute right-4 top-4 w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#E8F3FA", color: C.navy, border: "1px solid #D1E3EF" }}>
+          <X size={20} />
+        </button>
+        <h2 className="font-extrabold text-2xl mb-2" style={{ color: C.dark }}>Tìm kiếm sản phẩm</h2>
+        <p className="text-sm mb-5" style={{ color: "#64748B" }}>Nhập tên máy, camera, pin hoặc bộ nhớ để tìm nhanh.</p>
+        <div className="flex items-center gap-3 rounded-2xl px-4 py-3 mb-5" style={{ border: "1.5px solid #D1DCE8" }}>
+          <Search size={18} style={{ color: "#94A3B8" }} />
+          <input autoFocus value={query} onChange={(e) => setQuery(e.target.value)} className="flex-1 min-w-0 outline-none text-sm" placeholder="Ví dụ: ProMax, 200MP, 5000mAh..." style={{ color: C.dark }} />
+        </div>
+        <div className="space-y-3">
+          {results.map((p) => (
+            <button key={p.id} onClick={() => openProduct(p.id)} className="w-full flex items-center gap-4 p-3 rounded-2xl text-left transition-all" style={{ background: "#F5F9FF", border: "1px solid #E2EAF4" }}>
+              <img src={p.image} alt={p.name} className="w-16 h-16 rounded-xl object-cover flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <div className="font-bold text-sm" style={{ color: C.dark }}>{p.name}</div>
+                <div className="text-xs truncate mt-1" style={{ color: "#64748B" }}>{p.specs[0]}</div>
+                <div className="font-extrabold text-sm mt-1" style={{ color: C.navy }}>{fmt(p.price)}</div>
+              </div>
+              <ChevronRight size={18} style={{ color: C.cyan }} />
+            </button>
+          ))}
+          {results.length === 0 && (
+            <div className="text-center py-10 text-sm" style={{ color: "#64748B" }}>Không tìm thấy sản phẩm phù hợp.</div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function CartDrawer({
+  cartCount,
+  setCartCount,
+  onClose,
+  setPage,
+  setSelectedProductId,
+}: {
+  cartCount: number;
+  setCartCount: (n: number) => void;
+  onClose: () => void;
+  setPage: (p: string) => void;
+  setSelectedProductId: (id: number) => void;
+}) {
+  const displayItems = cartCount > 0 ? PRODUCTS.slice(0, Math.min(cartCount, 2)) : [];
+  const subtotal = displayItems.reduce((sum, p) => sum + p.price, 0);
+
+  function checkout() {
+    setSelectedProductId(displayItems[0]?.id ?? 0);
+    setPage("checkout");
+    onClose();
+    window.scrollTo(0, 0);
+  }
+
+  return (
+    <div className="fixed inset-0 z-[100]" style={{ background: "rgba(4,12,22,0.58)", backdropFilter: "blur(8px)" }}>
+      <div className="absolute right-0 top-0 h-full w-full max-w-md p-6 flex flex-col" style={{ background: "#fff", boxShadow: "-20px 0 70px rgba(0,0,0,0.25)" }}>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="font-extrabold text-2xl" style={{ color: C.dark }}>Giỏ hàng</h2>
+            <p className="text-sm mt-1" style={{ color: "#64748B" }}>{cartCount} sản phẩm trong giỏ</p>
+          </div>
+          <button aria-label="Đóng giỏ hàng" onClick={onClose} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: "#E8F3FA", color: C.navy, border: "1px solid #D1E3EF" }}>
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="flex-1 overflow-y-auto space-y-4">
+          {displayItems.map((p) => (
+            <div key={p.id} className="flex gap-4 p-4 rounded-2xl" style={{ background: "#F5F9FF", border: "1px solid #E2EAF4" }}>
+              <img src={p.image} alt={p.name} className="w-20 h-20 rounded-2xl object-cover flex-shrink-0" />
+              <div className="flex-1 min-w-0">
+                <h3 className="font-bold text-sm" style={{ color: C.dark }}>{p.name}</h3>
+                <p className="text-xs mt-1" style={{ color: "#64748B" }}>128GB · Chính hãng</p>
+                <div className="font-extrabold text-sm mt-2" style={{ color: C.navy }}>{fmt(p.price)}</div>
+              </div>
+            </div>
+          ))}
+          {displayItems.length === 0 && (
+            <div className="text-center py-16">
+              <ShoppingCart size={38} className="mx-auto mb-4" style={{ color: "#94A3B8" }} />
+              <p className="font-bold mb-1" style={{ color: C.dark }}>Giỏ hàng đang trống</p>
+              <p className="text-sm" style={{ color: "#64748B" }}>Hãy thêm sản phẩm để bắt đầu thanh toán.</p>
+            </div>
+          )}
+        </div>
+
+        <div className="pt-5 mt-5" style={{ borderTop: "1px solid #E2EAF4" }}>
+          <div className="flex items-center justify-between mb-4">
+            <span className="font-bold" style={{ color: C.dark }}>Tạm tính</span>
+            <span className="font-extrabold text-xl" style={{ color: C.navy }}>{fmt(subtotal)}</span>
+          </div>
+          <div className="flex items-center gap-3 mb-4">
+            <button onClick={() => setCartCount(Math.max(0, cartCount - 1))} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ border: "1.5px solid #D1DCE8", color: C.navy }}>
+              <Minus size={16} />
+            </button>
+            <span className="font-bold text-sm" style={{ color: C.dark }}>{cartCount}</span>
+            <button onClick={() => setCartCount(cartCount + 1)} className="w-10 h-10 rounded-full flex items-center justify-center" style={{ border: "1.5px solid #D1DCE8", color: C.navy }}>
+              <Plus size={16} />
+            </button>
+          </div>
+          <BtnPrimary className="w-full py-3.5 text-sm" onClick={displayItems.length ? checkout : () => { setPage("products"); onClose(); window.scrollTo(0,0); }}>
+            {displayItems.length ? <>Thanh toán <ArrowRight size={16} /></> : <>Xem sản phẩm <ArrowRight size={16} /></>}
+          </BtnPrimary>
+          <BtnOutline dark={false} className="w-full py-3.5 text-sm mt-3" onClick={() => { setPage("products"); onClose(); window.scrollTo(0,0); }}>Tiếp tục mua sắm</BtnOutline>
         </div>
       </div>
     </div>
@@ -791,6 +928,131 @@ function ProductsPage({ setPage, setSelectedProductId }: { setPage: (p: string) 
               </div>
             ))}
           </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function PromotionsPage({ setPage }: { setPage: (p: string) => void }) {
+  return (
+    <div style={{ background: "#F5F9FF", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <section className="pt-28 pb-14" style={{ background: C.dark }}>
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.cyan }}>Khuyến mãi</p>
+          <h1 className="font-extrabold text-white leading-tight mb-4" style={{ fontSize: "clamp(2.2rem,4vw,3.6rem)", letterSpacing: "-0.02em" }}>Ưu đãi đang diễn ra</h1>
+          <p className="text-base leading-relaxed max-w-xl" style={{ color: "rgba(240,246,255,0.58)" }}>Tổng hợp chương trình giảm giá, trả góp và quà tặng mới nhất tại Phúc Thọ Mobile.</p>
+        </div>
+      </section>
+      <section className="py-12">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 grid sm:grid-cols-3 gap-5">
+          {PROMOTIONS.map((promo, i) => (
+            <div key={i} className="bg-white rounded-[24px] overflow-hidden" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+              <div className="h-1.5" style={{ background: promo.accent }} />
+              <div className="p-6">
+                <div className="flex items-center gap-2 mb-2"><Clock size={13} style={{ color: "#94A3B8" }} /><span className="text-xs" style={{ color: "#94A3B8" }}>{promo.time}</span></div>
+                <h3 className="font-bold text-lg mb-2" style={{ color: C.dark }}>{promo.title}</h3>
+                <p className="text-sm leading-relaxed mb-6" style={{ color: "#64748B" }}>{promo.desc}</p>
+                <BtnPrimary className="w-full py-3 text-sm" onClick={() => { setPage("products"); window.scrollTo(0,0); }}>Mua ngay</BtnPrimary>
+              </div>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function AccessoriesPage({ setPage, setSelectedProductId }: { setPage: (p: string) => void; setSelectedProductId: (id: number) => void }) {
+  const accessories = [
+    { icon: Headphones, title: "Tai nghe không dây", desc: "Âm thanh rõ, pin lâu, kết nối ổn định.", price: "790.000đ" },
+    { icon: CreditCard, title: "Sạc nhanh & cáp", desc: "Sạc an toàn, chuẩn PD/QC cho nhiều thiết bị.", price: "290.000đ" },
+    { icon: Shield, title: "Ốp lưng & kính cường lực", desc: "Bảo vệ máy chắc chắn, thiết kế tinh gọn.", price: "190.000đ" },
+    { icon: Watch, title: "Đồng hồ thông minh", desc: "Theo dõi sức khỏe, thông báo, luyện tập.", price: "1.990.000đ" },
+  ];
+
+  return (
+    <div style={{ background: "#F5F9FF", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <section className="pt-28 pb-14" style={{ background: C.dark }}>
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.cyan }}>Phụ kiện</p>
+          <h1 className="font-extrabold text-white leading-tight mb-4" style={{ fontSize: "clamp(2.2rem,4vw,3.6rem)", letterSpacing: "-0.02em" }}>Hoàn thiện trải nghiệm thiết bị</h1>
+          <p className="text-base leading-relaxed max-w-xl" style={{ color: "rgba(240,246,255,0.58)" }}>Tai nghe, sạc, ốp lưng, đồng hồ và nhiều phụ kiện chính hãng cho điện thoại của bạn.</p>
+        </div>
+      </section>
+      <section className="py-12">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
+          {accessories.map(({ icon: Icon, title, desc, price }) => (
+            <div key={title} className="bg-white rounded-[24px] p-6" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5" style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})` }}>
+                <Icon size={21} className="text-white" />
+              </div>
+              <h3 className="font-bold text-base mb-2" style={{ color: C.dark }}>{title}</h3>
+              <p className="text-sm leading-relaxed mb-4" style={{ color: "#64748B" }}>{desc}</p>
+              <div className="font-extrabold mb-5" style={{ color: C.navy }}>Từ {price}</div>
+              <BtnOutline dark={false} className="w-full py-3 text-sm" onClick={() => { setSelectedProductId(0); setPage("product"); window.scrollTo(0,0); }}>Xem gợi ý</BtnOutline>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function NewsPage() {
+  return (
+    <div style={{ background: "#fff", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <section className="pt-28 pb-14" style={{ background: C.dark }}>
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.cyan }}>Tin công nghệ</p>
+          <h1 className="font-extrabold text-white leading-tight mb-4" style={{ fontSize: "clamp(2.2rem,4vw,3.6rem)", letterSpacing: "-0.02em" }}>Cập nhật xu hướng mới</h1>
+          <p className="text-base leading-relaxed max-w-xl" style={{ color: "rgba(240,246,255,0.58)" }}>Mẹo chọn máy, bảo quản pin và các xu hướng AI trên smartphone.</p>
+        </div>
+      </section>
+      <section className="py-12">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 grid sm:grid-cols-3 gap-6">
+          {NEWS.map((n) => (
+            <article key={n.title} className="bg-white rounded-[24px] overflow-hidden" style={{ border: "1px solid #E2EAF4" }}>
+              <img src={n.image} alt={n.title} className="w-full h-52 object-cover" />
+              <div className="p-5">
+                <span className="text-[10px] font-extrabold uppercase tracking-widest" style={{ color: C.cyan }}>{n.tag}</span>
+                <h3 className="font-bold text-base mt-2 mb-2 leading-snug" style={{ color: C.dark }}>{n.title}</h3>
+                <p className="text-sm leading-relaxed" style={{ color: "#64748B" }}>{n.desc}</p>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+}
+
+function SupportPage({ onLoginClick }: { onLoginClick: () => void }) {
+  return (
+    <div style={{ background: "#F5F9FF", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <section className="pt-28 pb-14" style={{ background: C.dark }}>
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.cyan }}>Hỗ trợ</p>
+          <h1 className="font-extrabold text-white leading-tight mb-4" style={{ fontSize: "clamp(2.2rem,4vw,3.6rem)", letterSpacing: "-0.02em" }}>Chúng tôi luôn sẵn sàng giúp bạn</h1>
+          <p className="text-base leading-relaxed max-w-xl" style={{ color: "rgba(240,246,255,0.58)" }}>Tra cứu đơn hàng, bảo hành, đổi trả và tư vấn chọn sản phẩm.</p>
+        </div>
+      </section>
+      <section className="py-12">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12 grid md:grid-cols-3 gap-5">
+          {[
+            { icon: PhoneCall, title: "Hotline", desc: "1800 1234 · 8:00 - 22:00" },
+            { icon: Wrench, title: "Bảo hành", desc: "Kiểm tra tình trạng và gửi yêu cầu hỗ trợ." },
+            { icon: Truck, title: "Theo dõi đơn hàng", desc: "Cập nhật giao hàng và thông tin thanh toán." },
+          ].map(({ icon: Icon, title, desc }) => (
+            <div key={title} className="bg-white rounded-[24px] p-6" style={{ boxShadow: "0 2px 12px rgba(0,0,0,0.05)" }}>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5" style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})` }}>
+                <Icon size={21} className="text-white" />
+              </div>
+              <h3 className="font-bold text-base mb-2" style={{ color: C.dark }}>{title}</h3>
+              <p className="text-sm leading-relaxed mb-5" style={{ color: "#64748B" }}>{desc}</p>
+              <BtnOutline dark={false} className="w-full py-3 text-sm" onClick={onLoginClick}>Mở hỗ trợ</BtnOutline>
+            </div>
+          ))}
         </div>
       </section>
     </div>
@@ -1338,22 +1600,37 @@ function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState<"home" | "products" | "product" | "checkout" | "success">("home");
+  const [page, setPage] = useState<"home" | "products" | "promotions" | "accessories" | "news" | "support" | "product" | "checkout" | "success">("home");
   const [selectedProductId, setSelectedProductId] = useState(0);
   const [cartCount, setCartCount] = useState(2);
   const [loginOpen, setLoginOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [cartOpen, setCartOpen] = useState(false);
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <Header page={page} setPage={setPage as (p: string) => void} cartCount={cartCount} onLoginClick={() => setLoginOpen(true)} />
+      <Header
+        page={page}
+        setPage={setPage as (p: string) => void}
+        cartCount={cartCount}
+        onLoginClick={() => setLoginOpen(true)}
+        onSearchClick={() => setSearchOpen(true)}
+        onCartClick={() => setCartOpen(true)}
+      />
 
       {page === "home" && <HomePage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
       {page === "products" && <ProductsPage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+      {page === "promotions" && <PromotionsPage setPage={setPage as (p: string) => void} />}
+      {page === "accessories" && <AccessoriesPage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+      {page === "news" && <NewsPage />}
+      {page === "support" && <SupportPage onLoginClick={() => setLoginOpen(true)} />}
       {page === "product" && <ProductPage productId={selectedProductId} setPage={setPage as (p: string) => void} setCartCount={setCartCount} cartCount={cartCount} />}
       {page === "checkout" && <CheckoutPage productId={selectedProductId} setPage={setPage as (p: string) => void} />}
       {page === "success" && <SuccessPage setPage={setPage as (p: string) => void} />}
 
       {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
+      {searchOpen && <SearchModal onClose={() => setSearchOpen(false)} setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+      {cartOpen && <CartDrawer cartCount={cartCount} setCartCount={setCartCount} onClose={() => setCartOpen(false)} setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
 
       {page !== "success" && <Footer />}
 
