@@ -7,12 +7,9 @@ import {
   MapPin, Mail, PhoneCall,
   ArrowRight, BadgeCheck, Zap, Clock, MessageCircle,
   Star, Plus, Minus, Check, ChevronDown, Heart,
-  Banknote, Wallet, Building2, RotateCcw, CheckCircle2, Package2,
+  Banknote, Wallet, Building2, RotateCcw, CheckCircle2, Package2, LockKeyhole,
 } from "lucide-react";
 import logo from "../imports/logo_ph_c_th__b_n_tr_ng.png";
-import { AuthProvider, useAuth } from "./AuthContext";
-import { LoginModal } from "./LoginModal";
-import { ProductsPage } from "./ProductsPage";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const C = { cyan: "#29ABE2", navy: "#1B3A6B", dark: "#07101E", darker: "#040C16", mid: "#0D1F38" };
@@ -172,7 +169,7 @@ function BtnOutline({ children, onClick, className = "", dark = true }: { childr
 }
 
 // ─── HEADER ──────────────────────────────────────────────────────────────────
-function Header({ page, setPage, cartCount }: { page: string; setPage: (p: string) => void; cartCount: number }) {
+function Header({ page, setPage, cartCount, onLoginClick }: { page: string; setPage: (p: string) => void; cartCount: number; onLoginClick: () => void }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -182,7 +179,35 @@ function Header({ page, setPage, cartCount }: { page: string; setPage: (p: strin
     return () => window.removeEventListener("scroll", fn);
   }, []);
 
-  const navItems = ["Trang chủ", "Sản phẩm", "Khuyến mãi", "Phụ kiện", "Tin công nghệ", "Hỗ trợ"];
+  const navItems = [
+    { label: "Trang chủ", target: "top" },
+    { label: "Sản phẩm", target: "products" },
+    { label: "Khuyến mãi", target: "promotions" },
+    { label: "Phụ kiện", target: "accessories" },
+    { label: "Tin công nghệ", target: "news" },
+    { label: "Hỗ trợ", target: "support" },
+  ];
+
+  function goSection(target: string) {
+    setMobileOpen(false);
+
+    if (target === "products") {
+      setPage("products");
+      window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+      return;
+    }
+
+    setPage("home");
+
+    window.setTimeout(() => {
+      if (target === "top") {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      document.getElementById(target)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, page === "home" ? 0 : 80);
+  }
 
   return (
     <header
@@ -201,76 +226,37 @@ function Header({ page, setPage, cartCount }: { page: string; setPage: (p: strin
         </a>
 
         <nav className="hidden lg:flex items-center gap-0.5">
-          {navItems.map((item, i) => (
-            <a key={i} href="#"
-              onClick={e => { e.preventDefault(); if (item === "Trang chủ") {
-              setPage("home");
-              } else if (item === "Sản phẩm") {
-              console.log("Products clicked");
-              setPage("products");
-              } window.scrollTo(0,0); }}
+          {navItems.map((item) => (
+            <a key={item.target} href={`#${item.target}`}
+              onClick={e => { e.preventDefault(); goSection(item.target); }}
               className="px-4 py-2 text-sm font-semibold rounded-full transition-colors"
-              style={{ color: i === 0 ? C.cyan : "rgba(240,246,255,0.68)" }}>
-              {item}
+              style={{ color: (item.target === "top" && page === "home") || (item.target === "products" && page === "products") ? C.cyan : "rgba(240,246,255,0.68)" }}>
+              {item.label}
             </a>
           ))}
-          
         </nav>
 
         <div className="flex items-center gap-1">
-          {[Search].map((Icon, i) => (
-            <button key={i} className="hidden md:flex p-2 rounded-full transition-colors" style={{ color: "rgba(240,246,255,0.55)" }}
-              onMouseEnter={e => (e.currentTarget.style.color = "#F0F6FF")}
-              onMouseLeave={e => (e.currentTarget.style.color = "rgba(240,246,255,0.55)")}>
-              <Icon size={18} />
-            </button>
-          ))}
-          {[User].map((Icon, i) => (
-          isLoggedIn ? (
           <button
-          key={i}
-           onClick={() => {
-              // Show user menu
-            }}
-            className="p-2 rounded-full hover:bg-gray-100 transition relative group"
+            aria-label="Tìm kiếm sản phẩm"
+            onClick={() => goSection("products")}
+            className="hidden md:flex p-2 rounded-full transition-colors"
+            style={{ color: "rgba(240,246,255,0.55)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#F0F6FF")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(240,246,255,0.55)")}
           >
-            <Icon size={18} className="text-cyan-400" />
-
-            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all">
-              <div className="p-3 border-b">
-                <p className="font-bold text-sm" style={{ color: C.dark }}>
-                  {user.name}
-                </p>
-                <p className="text-xs" style={{ color: "#94A3B8" }}>
-                  {user.email}
-                </p>
-              </div>
-
-              <button
-                onClick={() => {
-                  logout();
-                  window.location.reload();
-              }}
-                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-              >
-                Đăng xuất
-              </button>
-            </div>
+            <Search size={18} />
           </button>
-        ) : (
           <button
-            key={i}
-            onClick={() => {
-              setPage("login");
-              console.log("Login clicked");
-              window.scrollTo(0, 0);
-            }}
-            className="p-2 rounded-full hover:bg-gray-100 transition relative group"
+            aria-label="Đăng nhập tài khoản"
+            onClick={onLoginClick}
+            className="hidden md:flex p-2 rounded-full transition-colors"
+            style={{ color: "rgba(240,246,255,0.55)" }}
+            onMouseEnter={e => (e.currentTarget.style.color = "#F0F6FF")}
+            onMouseLeave={e => (e.currentTarget.style.color = "rgba(240,246,255,0.55)")}
           >
-            <Icon size={18} />
+            <User size={18} />
           </button>
-        )
-        ))}
           <button className="flex p-2 rounded-full relative" style={{ color: "rgba(240,246,255,0.55)" }}>
             <ShoppingCart size={18} />
             {cartCount > 0 && (
@@ -279,7 +265,7 @@ function Header({ page, setPage, cartCount }: { page: string; setPage: (p: strin
               </span>
             )}
           </button>
-          <BtnPrimary className="hidden md:inline-flex text-sm px-5 py-2 ml-1.5">Mua ngay</BtnPrimary>
+          <BtnPrimary className="hidden md:inline-flex text-sm px-5 py-2 ml-1.5" onClick={() => goSection("products")}>Mua ngay</BtnPrimary>
           <button onClick={() => setMobileOpen(!mobileOpen)} className="lg:hidden p-2 ml-1" style={{ color: "rgba(240,246,255,0.8)" }}>
             {mobileOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -289,16 +275,62 @@ function Header({ page, setPage, cartCount }: { page: string; setPage: (p: strin
       {mobileOpen && (
         <div className="lg:hidden border-t" style={{ background: "rgba(13,31,56,0.97)", backdropFilter: "blur(20px)", borderColor: "rgba(255,255,255,0.07)" }}>
           <div className="px-6 py-4 flex flex-col gap-1">
-            {navItems.map((item, i) => (
-              <a key={i} href="#" onClick={() => setMobileOpen(false)} className="py-3 px-4 text-sm font-semibold rounded-xl" style={{ color: "rgba(240,246,255,0.7)" }}>
-                {item}
+            {navItems.map((item) => (
+              <a key={item.target} href={`#${item.target}`} onClick={e => { e.preventDefault(); goSection(item.target); }} className="py-3 px-4 text-sm font-semibold rounded-xl" style={{ color: "rgba(240,246,255,0.7)" }}>
+                {item.label}
               </a>
             ))}
-            <BtnPrimary className="mt-3 py-3.5 px-4 text-sm w-full">Mua ngay <ArrowRight size={16} /></BtnPrimary>
+            <button onClick={() => { setMobileOpen(false); onLoginClick(); }} className="py-3 px-4 text-sm font-semibold rounded-xl flex items-center gap-2" style={{ color: "rgba(240,246,255,0.7)" }}>
+              <User size={16} /> Đăng nhập
+            </button>
+            <BtnPrimary className="mt-3 py-3.5 px-4 text-sm w-full" onClick={() => goSection("products")}>Mua ngay <ArrowRight size={16} /></BtnPrimary>
           </div>
         </div>
       )}
     </header>
+  );
+}
+
+function LoginModal({ onClose }: { onClose: () => void }) {
+  return (
+    <div className="fixed inset-0 z-[100] flex min-h-dvh items-center justify-center px-4 py-6" style={{ background: "rgba(4,12,22,0.72)", backdropFilter: "blur(10px)" }}>
+      <div className="relative w-full max-w-md rounded-[28px] p-7 max-h-[calc(100dvh-48px)] overflow-y-auto" style={{ background: "#fff", boxShadow: "0 24px 80px rgba(0,0,0,0.32)" }}>
+        <button
+          aria-label="Đóng đăng nhập"
+          onClick={onClose}
+          className="absolute right-4 top-4 w-10 h-10 rounded-full flex items-center justify-center transition-all"
+          style={{ background: "#E8F3FA", color: C.navy, border: "1px solid #D1E3EF" }}
+        >
+          <X size={20} />
+        </button>
+        <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-5" style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})` }}>
+          <User size={22} className="text-white" />
+        </div>
+        <h2 className="font-extrabold text-2xl mb-2" style={{ color: C.dark }}>Đăng nhập</h2>
+        <p className="text-sm mb-6 pr-8" style={{ color: "#64748B" }}>Theo dõi đơn hàng, lưu sản phẩm yêu thích và nhận ưu đãi thành viên.</p>
+        <div className="space-y-4">
+          <label className="block">
+            <span className="block text-xs font-bold mb-1.5" style={{ color: "#4A5568" }}>Email hoặc số điện thoại</span>
+            <div className="flex items-center gap-2 rounded-2xl px-4 py-3" style={{ border: "1.5px solid #D1DCE8" }}>
+              <Mail size={17} style={{ color: "#94A3B8" }} />
+              <input className="flex-1 min-w-0 outline-none text-sm" placeholder="email@example.com" style={{ color: C.dark }} />
+            </div>
+          </label>
+          <label className="block">
+            <span className="block text-xs font-bold mb-1.5" style={{ color: "#4A5568" }}>Mật khẩu</span>
+            <div className="flex items-center gap-2 rounded-2xl px-4 py-3" style={{ border: "1.5px solid #D1DCE8" }}>
+              <LockKeyhole size={17} style={{ color: "#94A3B8" }} />
+              <input type="password" className="flex-1 min-w-0 outline-none text-sm" placeholder="Nhập mật khẩu" style={{ color: C.dark }} />
+            </div>
+          </label>
+        </div>
+        <BtnPrimary className="w-full py-3.5 text-sm mt-6" onClick={onClose}>Đăng nhập</BtnPrimary>
+        <div className="mt-5 flex items-center justify-between text-sm">
+          <a href="#" style={{ color: C.navy }} onClick={e => e.preventDefault()}>Quên mật khẩu?</a>
+          <a href="#" style={{ color: C.cyan }} onClick={e => e.preventDefault()}>Tạo tài khoản</a>
+        </div>
+      </div>
+    </div>
   );
 }
 
@@ -310,7 +342,7 @@ function Footer() {
     { heading: "Chính sách", links: ["Chính sách bảo hành", "Chính sách đổi trả", "Chính sách bảo mật", "Điều khoản sử dụng"] },
   ];
   return (
-    <footer className="py-16" style={{ background: C.darker, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    <footer id="support" className="py-16 scroll-mt-20" style={{ background: C.darker, fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
         <div className="grid grid-cols-2 md:grid-cols-5 gap-10 mb-12">
           <div className="col-span-2 md:col-span-1">
@@ -375,7 +407,7 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
       {/* HERO */}
-      <section className="relative min-h-screen flex items-center overflow-hidden" style={{ background: C.dark }}>
+      <section id="top" className="relative min-h-screen flex items-center overflow-hidden scroll-mt-20" style={{ background: C.dark }}>
         <div className="absolute inset-0">
           <div className="absolute inset-0" style={{ background: "linear-gradient(135deg, #07101E 0%, #0D1F38 55%, rgba(27,58,107,0.35) 100%)" }} />
           <div className="absolute top-0 right-0 w-3/5 h-full" style={{ background: "radial-gradient(ellipse at 80% 50%, rgba(41,171,226,0.11) 0%, transparent 65%)" }} />
@@ -397,10 +429,10 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
                 Khám phá bộ sưu tập điện thoại và phụ kiện cao cấp chính hãng tại Phúc Thọ Mobile — nơi công nghệ gặp gỡ phong cách.
               </p>
               <div className="flex flex-wrap gap-3">
-                <BtnPrimary className="px-7 py-4 text-sm" onClick={() => { setSelectedProductId(0); setPage("product"); window.scrollTo(0,0); }}>
+                <BtnPrimary className="px-7 py-4 text-sm" onClick={() => { setPage("products"); window.scrollTo(0,0); }}>
                   Khám phá ngay <ArrowRight size={17} />
                 </BtnPrimary>
-                <BtnOutline className="px-7 py-4 text-sm" onClick={() => { setSelectedProductId(0); setPage("product"); window.scrollTo(0,0); }}>Mua ngay</BtnOutline>
+                <BtnOutline className="px-7 py-4 text-sm" onClick={() => { setPage("products"); window.scrollTo(0,0); }}>Mua ngay</BtnOutline>
               </div>
               <div className="flex gap-10 mt-12 pt-10" style={{ borderTop: "1px solid rgba(255,255,255,0.07)" }}>
                 {[["10K+", "Sản phẩm"], ["50K+", "Khách hàng"], ["4.9★", "Đánh giá"]].map(([n, l]) => (
@@ -432,7 +464,7 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
       </section>
 
       {/* CATEGORIES */}
-      <section className="py-14" style={{ background: "#fff" }}>
+      <section id="accessories" className="py-14 scroll-mt-20" style={{ background: "#fff" }}>
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
           <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
             {CATEGORIES.map(({ icon: Icon, label }) => (
@@ -450,7 +482,7 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
       </section>
 
       {/* FEATURED PRODUCTS */}
-      <section className="py-20" style={{ background: "#F5F9FF" }}>
+      <section id="products" className="py-20 scroll-mt-20" style={{ background: "#F5F9FF" }}>
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -610,7 +642,7 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
       </section>
 
       {/* PROMOTIONS */}
-      <section className="py-20" style={{ background: "#F5F9FF" }}>
+      <section id="promotions" className="py-20 scroll-mt-20" style={{ background: "#F5F9FF" }}>
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -639,7 +671,7 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
       </section>
 
       {/* NEWS */}
-      <section className="py-20" style={{ background: "#fff" }}>
+      <section id="news" className="py-20 scroll-mt-20" style={{ background: "#fff" }}>
         <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
           <div className="flex items-end justify-between mb-10">
             <div>
@@ -679,6 +711,82 @@ function HomePage({ setPage, setSelectedProductId }: { setPage: (p: string) => v
                 <div>
                   <div className="font-bold text-sm text-white">{title}</div>
                   <div className="text-xs mt-0.5" style={{ color: "rgba(240,246,255,0.42)" }}>{desc}</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+// ─── PRODUCTS PAGE ──────────────────────────────────────────────────────────
+function ProductsPage({ setPage, setSelectedProductId }: { setPage: (p: string) => void; setSelectedProductId: (id: number) => void }) {
+  function goProduct(id: number) {
+    setSelectedProductId(id);
+    setPage("product");
+    window.scrollTo(0, 0);
+  }
+
+  return (
+    <div style={{ background: "#F5F9FF", minHeight: "100vh", fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <section className="pt-28 pb-14" style={{ background: C.dark }}>
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <div className="max-w-3xl">
+            <p className="text-xs font-bold uppercase tracking-widest mb-3" style={{ color: C.cyan }}>Danh mục sản phẩm</p>
+            <h1 className="font-extrabold text-white leading-tight mb-4" style={{ fontSize: "clamp(2.2rem,4vw,3.6rem)", letterSpacing: "-0.02em" }}>
+              Sản phẩm Phúc Thọ Mobile
+            </h1>
+            <p className="text-base leading-relaxed max-w-xl" style={{ color: "rgba(240,246,255,0.58)" }}>
+              Khám phá điện thoại và phụ kiện nổi bật, chọn nhanh sản phẩm phù hợp rồi xem chi tiết hoặc mua ngay.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section className="py-12">
+        <div className="max-w-[1440px] mx-auto px-6 lg:px-12">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-8">
+            <div>
+              <h2 className="font-extrabold text-2xl" style={{ color: C.dark, letterSpacing: "-0.02em" }}>Tất cả sản phẩm</h2>
+              <p className="text-sm mt-1" style={{ color: "#64748B" }}>{PRODUCTS.length} sản phẩm đang có sẵn</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {["Tất cả", "Điện thoại", "Hàng mới", "Đang giảm"].map((item, i) => (
+                <button key={item} className="px-4 py-2 rounded-full text-sm font-semibold" style={i === 0 ? { background: C.cyan, color: "#fff" } : { background: "#fff", color: C.navy, border: "1px solid #DCE8F2" }}>
+                  {item}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {PRODUCTS.map((p) => (
+              <div key={p.id} className="bg-white rounded-[28px] overflow-hidden transition-all duration-300" style={{ boxShadow: "0 2px 14px rgba(0,0,0,0.06)" }}
+                onMouseEnter={e => { (e.currentTarget as HTMLElement).style.transform = "translateY(-4px)"; (e.currentTarget as HTMLElement).style.boxShadow = "0 16px 48px rgba(41,171,226,0.13)"; }}
+                onMouseLeave={e => { (e.currentTarget as HTMLElement).style.transform = "none"; (e.currentTarget as HTMLElement).style.boxShadow = "0 2px 14px rgba(0,0,0,0.06)"; }}>
+                <div className="relative p-5 pb-0" style={{ background: "#EEF6FC" }}>
+                  {p.badge && <span className="absolute top-4 left-4 z-10 text-xs font-bold px-3 py-1 rounded-full" style={badgeStyle(p.badge)}>{p.badge}</span>}
+                  <button className="absolute top-4 right-4 z-10 w-8 h-8 rounded-full flex items-center justify-center" style={{ background: "rgba(255,255,255,0.78)" }}>
+                    <Heart size={15} style={{ color: "#94A3B8" }} />
+                  </button>
+                  <img src={p.image} alt={p.name} className="w-full h-56 object-cover rounded-2xl" />
+                </div>
+                <div className="p-5">
+                  <h3 className="font-bold text-base mb-2.5" style={{ color: C.dark }}>{p.name}</h3>
+                  <ul className="space-y-1.5 mb-3">
+                    {p.specs.map((s, j) => (
+                      <li key={j} className="text-xs flex items-center gap-1.5" style={{ color: "#4A5568" }}>
+                        <span className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ background: C.cyan }} />{s}
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="font-extrabold text-base mb-4" style={{ color: C.navy }}>{fmt(p.price)}</div>
+                  <div className="flex gap-2">
+                    <BtnOutline dark={false} className="flex-1 text-xs py-2.5" onClick={() => goProduct(p.id)}>Chi tiết</BtnOutline>
+                    <BtnPrimary className="flex-1 text-xs py-2.5" onClick={() => goProduct(p.id)}>Mua ngay</BtnPrimary>
+                  </div>
                 </div>
               </div>
             ))}
@@ -1230,47 +1338,30 @@ function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
 
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 export default function App() {
-  const [page, setPage] = useState<"home" | "product" | "checkout" | "success">("home");
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
+  const [page, setPage] = useState<"home" | "products" | "product" | "checkout" | "success">("home");
   const [selectedProductId, setSelectedProductId] = useState(0);
   const [cartCount, setCartCount] = useState(2);
+  const [loginOpen, setLoginOpen] = useState(false);
 
   return (
-  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-    {/* Thay thế Header cũ */}
-    <Header 
-      page={page} 
-      setPage={setPage as (p: string) => void} 
-      cartCount={cartCount}
-      onLoginClick={() => setIsLoginModalOpen(true)}
-    />
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <Header page={page} setPage={setPage as (p: string) => void} cartCount={cartCount} onLoginClick={() => setLoginOpen(true)} />
 
-    {/* Thêm trang Products */}
-    {page === "products" && <ProductsPage products={PRODUCTS} setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
-    
-    {/* Các trang khác giữ nguyên */}
-    {page === "home" && <HomePage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
-    {page === "product" && <ProductPage productId={selectedProductId} setPage={setPage as (p: string) => void} setCartCount={setCartCount} cartCount={cartCount} />}
-    {page === "checkout" && <CheckoutPage productId={selectedProductId} setPage={setPage as (p: string) => void} />}
-    {page === "success" && <SuccessPage setPage={setPage as (p: string) => void} />}
+      {page === "home" && <HomePage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+      {page === "products" && <ProductsPage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+      {page === "product" && <ProductPage productId={selectedProductId} setPage={setPage as (p: string) => void} setCartCount={setCartCount} cartCount={cartCount} />}
+      {page === "checkout" && <CheckoutPage productId={selectedProductId} setPage={setPage as (p: string) => void} />}
+      {page === "success" && <SuccessPage setPage={setPage as (p: string) => void} />}
 
-    {page !== "success" && <Footer />}
+      {loginOpen && <LoginModal onClose={() => setLoginOpen(false)} />}
 
-    {/* Thêm Login Modal */}
-    <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+      {page !== "success" && <Footer />}
 
-    {/* Floating chat giữ nguyên */}
-    <a href="#" title="Chat tư vấn" className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110"
-      style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})`, boxShadow: "0 4px 24px rgba(41,171,226,0.38)" }}>
-      <MessageCircle size={24} className="text-white" />
-    </a>
-  </div>
+      {/* Floating chat */}
+      <a href="#" title="Chat tư vấn" className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110"
+        style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})`, boxShadow: "0 4px 24px rgba(41,171,226,0.38)" }}>
+        <MessageCircle size={24} className="text-white" />
+      </a>
+    </div>
   );
 }
-export default function AppWrapper() {
-  return (
-    <AuthProvider>
-      <App />
-    </AuthProvider>
-    );
-  }
