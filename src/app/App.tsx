@@ -1266,11 +1266,11 @@ export default function App() {
     </a>
   </div>
   );
-  export default function AppWrapper() {
+}
+export default function AppWrapper() {
   return (
     <AuthProvider>
       <App />
     </AuthProvider>
     );
   }
-}
