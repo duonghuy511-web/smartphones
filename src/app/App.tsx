@@ -10,6 +10,9 @@ import {
   Banknote, Wallet, Building2, RotateCcw, CheckCircle2, Package2,
 } from "lucide-react";
 import logo from "../imports/logo_ph_c_th__b_n_tr_ng.png";
+import { AuthProvider, useAuth } from "./AuthContext";
+import { LoginModal } from "./LoginModal";
+import { ProductsPage } from "./ProductsPage";
 
 // ─── CONSTANTS ───────────────────────────────────────────────────────────────
 const C = { cyan: "#29ABE2", navy: "#1B3A6B", dark: "#07101E", darker: "#040C16", mid: "#0D1F38" };
@@ -200,22 +203,74 @@ function Header({ page, setPage, cartCount }: { page: string; setPage: (p: strin
         <nav className="hidden lg:flex items-center gap-0.5">
           {navItems.map((item, i) => (
             <a key={i} href="#"
-              onClick={e => { e.preventDefault(); setPage("home"); window.scrollTo(0,0); }}
+              onClick={e => { e.preventDefault(); if (item === "Trang chủ") {
+              setPage("home");
+              } else if (item === "Sản phẩm") {
+              console.log("Products clicked");
+              setPage("products");
+              } window.scrollTo(0,0); }}
               className="px-4 py-2 text-sm font-semibold rounded-full transition-colors"
               style={{ color: i === 0 ? C.cyan : "rgba(240,246,255,0.68)" }}>
               {item}
             </a>
           ))}
+          
         </nav>
 
         <div className="flex items-center gap-1">
-          {[Search, User].map((Icon, i) => (
+          {[Search].map((Icon, i) => (
             <button key={i} className="hidden md:flex p-2 rounded-full transition-colors" style={{ color: "rgba(240,246,255,0.55)" }}
               onMouseEnter={e => (e.currentTarget.style.color = "#F0F6FF")}
               onMouseLeave={e => (e.currentTarget.style.color = "rgba(240,246,255,0.55)")}>
               <Icon size={18} />
             </button>
           ))}
+          {[User].map((Icon, i) => (
+          isLoggedIn ? (
+          <button
+          key={i}
+           onClick={() => {
+              // Show user menu
+            }}
+            className="p-2 rounded-full hover:bg-gray-100 transition relative group"
+          >
+            <Icon size={18} className="text-cyan-400" />
+
+            <div className="absolute top-full right-0 mt-2 w-48 bg-white rounded-xl shadow-lg opacity-0 group-hover:opacity-100 pointer-events-none group-hover:pointer-events-auto transition-all">
+              <div className="p-3 border-b">
+                <p className="font-bold text-sm" style={{ color: C.dark }}>
+                  {user.name}
+                </p>
+                <p className="text-xs" style={{ color: "#94A3B8" }}>
+                  {user.email}
+                </p>
+              </div>
+
+              <button
+                onClick={() => {
+                  logout();
+                  window.location.reload();
+              }}
+                className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+              >
+                Đăng xuất
+              </button>
+            </div>
+          </button>
+        ) : (
+          <button
+            key={i}
+            onClick={() => {
+              setPage("login");
+              console.log("Login clicked");
+              window.scrollTo(0, 0);
+            }}
+            className="p-2 rounded-full hover:bg-gray-100 transition relative group"
+          >
+            <Icon size={18} />
+          </button>
+        )
+        ))}
           <button className="flex p-2 rounded-full relative" style={{ color: "rgba(240,246,255,0.55)" }}>
             <ShoppingCart size={18} />
             {cartCount > 0 && (
@@ -1176,25 +1231,46 @@ function SuccessPage({ setPage }: { setPage: (p: string) => void }) {
 // ─── APP ROOT ─────────────────────────────────────────────────────────────────
 export default function App() {
   const [page, setPage] = useState<"home" | "product" | "checkout" | "success">("home");
+  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
   const [selectedProductId, setSelectedProductId] = useState(0);
   const [cartCount, setCartCount] = useState(2);
 
   return (
-    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
-      <Header page={page} setPage={setPage as (p: string) => void} cartCount={cartCount} />
+  <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+    {/* Thay thế Header cũ */}
+    <Header 
+      page={page} 
+      setPage={setPage as (p: string) => void} 
+      cartCount={cartCount}
+      onLoginClick={() => setIsLoginModalOpen(true)}
+    />
 
-      {page === "home" && <HomePage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
-      {page === "product" && <ProductPage productId={selectedProductId} setPage={setPage as (p: string) => void} setCartCount={setCartCount} cartCount={cartCount} />}
-      {page === "checkout" && <CheckoutPage productId={selectedProductId} setPage={setPage as (p: string) => void} />}
-      {page === "success" && <SuccessPage setPage={setPage as (p: string) => void} />}
+    {/* Thêm trang Products */}
+    {page === "products" && <ProductsPage products={PRODUCTS} setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+    
+    {/* Các trang khác giữ nguyên */}
+    {page === "home" && <HomePage setPage={setPage as (p: string) => void} setSelectedProductId={setSelectedProductId} />}
+    {page === "product" && <ProductPage productId={selectedProductId} setPage={setPage as (p: string) => void} setCartCount={setCartCount} cartCount={cartCount} />}
+    {page === "checkout" && <CheckoutPage productId={selectedProductId} setPage={setPage as (p: string) => void} />}
+    {page === "success" && <SuccessPage setPage={setPage as (p: string) => void} />}
 
-      {page !== "success" && <Footer />}
+    {page !== "success" && <Footer />}
 
-      {/* Floating chat */}
-      <a href="#" title="Chat tư vấn" className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110"
-        style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})`, boxShadow: "0 4px 24px rgba(41,171,226,0.38)" }}>
-        <MessageCircle size={24} className="text-white" />
-      </a>
-    </div>
+    {/* Thêm Login Modal */}
+    <LoginModal isOpen={isLoginModalOpen} onClose={() => setIsLoginModalOpen(false)} />
+
+    {/* Floating chat giữ nguyên */}
+    <a href="#" title="Chat tư vấn" className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full flex items-center justify-center transition-all hover:scale-110"
+      style={{ background: `linear-gradient(135deg, ${C.cyan}, ${C.navy})`, boxShadow: "0 4px 24px rgba(41,171,226,0.38)" }}>
+      <MessageCircle size={24} className="text-white" />
+    </a>
+  </div>
   );
+  export default function AppWrapper() {
+  return (
+    <AuthProvider>
+      <App />
+    </AuthProvider>
+    );
+  }
 }
